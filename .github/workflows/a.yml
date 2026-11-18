@@ -53,9 +53,9 @@ on:
         required: false
         default: "0"
 
-concurrency:
-  group: twreg-distributed-${{ github.ref }}
-  cancel-in-progress: false
+# 不设置 concurrency：每次 dispatch 都是独立批次，可同时跑多个。
+# GitHub 每个 concurrency group 只保留 1 个 running + 1 个 pending；
+# 连续点多次会让旧的 pending 被 “higher priority waiting request” 取消。
 
 jobs:
   prepare:
