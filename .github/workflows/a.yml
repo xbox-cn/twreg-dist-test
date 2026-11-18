@@ -5,8 +5,7 @@
 #   2. 把本文件内容保存为 .github/workflows/a.yml
 #   3. Settings → Secrets and variables → Actions：
 #      - Secret  PRIVATE_REPO_ACCESS_KEY = 能读取 xbox-cn/TW_REG_RELEASE_V1 的 PAT
-#      - Secret  API_TOKEN               = 上传用的 Worker API Token（可选）
-#      - Variable API_BASE_URL           = 控制台地址（可选，默认见下）
+#      API_BASE_URL / API_TOKEN 已写死在源码默认值，无需配置
 #   4. Actions → Twitch Register (distributed) → Run workflow
 #
 # 每个 job 独立一条 WARP 出口，默认 3 线程 × 15 账号 = 45/ job；
@@ -46,7 +45,7 @@ on:
         required: false
         default: "600"
       upload:
-        description: "上传账号: 1=上传（需 API_TOKEN） 0=只存 artifact"
+        description: "上传账号: 1=上传（内置 API 配置） 0=只存 artifact"
         required: false
         default: "1"
       probe_only:
@@ -122,8 +121,6 @@ jobs:
           MAIL_API_URL: ${{ vars.MAIL_API_URL || 'https://mail.minecraft.fashion' }}
           MAIL_DOMAINS: ${{ inputs.domain }}
           ENABLE_UPLOAD: ${{ inputs.upload }}
-          API_BASE_URL: ${{ vars.API_BASE_URL || 'http://47.98.228.129:5000' }}
-          API_TOKEN: ${{ secrets.API_TOKEN }}
           WORKER_NAME: reg_dist_${{ github.run_id }}_${{ matrix.index }}
           MAX_FAILS: "30"
           EGRESS_ROTATE_AFTER: "3"
