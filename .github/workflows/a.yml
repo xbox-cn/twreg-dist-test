@@ -8,7 +8,7 @@
 #      API_BASE_URL / API_TOKEN 已写死在源码默认值，无需配置
 #   4. Actions → Twitch Register (distributed) → Run workflow
 #
-# 每个 job 独立一条 WARP 出口，默认 3 线程 × 15 账号 = 45/ job；
+# 每个 job 独立一条 WARP 出口，默认 256 job × 3 线程 × 15 账号 = 11,520；
 # 总账号 = job_count × workers × accounts。
 
 name: Twitch Register (distributed)
@@ -17,9 +17,9 @@ on:
   workflow_dispatch:
     inputs:
       job_count:
-        description: "并行 job 数（每个 job 一条独立 WARP 出口，1-50）"
+        description: "并行 job 数（每个 job 一条独立 WARP 出口，1-256）"
         required: false
-        default: "1"
+        default: "256"
       workers:
         description: "每个 job 的线程数"
         required: false
@@ -68,7 +68,7 @@ jobs:
         env:
           N: ${{ inputs.job_count }}
         run: |
-          M=$(python3 -c "import json,os;n=max(1,min(50,int(os.environ.get('N') or 1)));print(json.dumps(list(range(n))))")
+          M=$(python3 -c "import json,os;n=max(1,min(256,int(os.environ.get('N') or 1)));print(json.dumps(list(range(n))))")
           echo "matrix=$M" >> "$GITHUB_OUTPUT"
           echo "matrix=$M"
 
