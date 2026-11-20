@@ -142,7 +142,7 @@ jobs:
           path: code/xehn-cache
           key: xehn-cache-v1
 
-      - name: 建立出口（XEHN WARP）并批量注册
+      - name: 建立出口（VPNGate 优先，失败降级 WARP）并批量注册
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
