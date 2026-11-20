@@ -28,6 +28,10 @@ on:
         description: "每个线程注册账号数"
         required: false
         default: "15"
+      rounds:
+        description: "批次数（每批 workers × accounts）"
+        required: false
+        default: "1"
       domain:
         description: "收信域名（*.xxx 表示每次随机子域）"
         required: false
@@ -149,6 +153,7 @@ jobs:
           ENABLE_UPLOAD: ${{ inputs.upload }}
           WORKER_NAME: reg_dist_${{ github.run_id }}_${{ matrix.index }}
           MAX_FAILS: "30"
+          MAX_CONCURRENT_CTX: ${{ inputs.workers }}
           EGRESS_ROTATE_AFTER: "3"
           RUYIJS_FIREFOX: "159"
           BROWSER_ENGINE: "chromium"
@@ -178,6 +183,7 @@ jobs:
             python batch_run.py --probe-only
           } else {
             python batch_run.py --workers "$env:WORKERS" --accounts "$env:ACCOUNTS" `
+              --rounds "${{ inputs.rounds }}" `
               --rest-every "$env:REST_EVERY" --rest-sec "$env:REST_SEC"
           }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
