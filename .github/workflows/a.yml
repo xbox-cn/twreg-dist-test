@@ -8,7 +8,7 @@
 #      API_BASE_URL / API_TOKEN 已写死在源码默认值，无需配置
 #   4. Actions → Twitch Register (distributed) → Run workflow
 #
-# 每个 job 独立一条 WARP 出口，默认 256 job × 3 线程 × 15 账号 = 11,520；
+# 每个 job 先尝试 VPNGate（OpenVPN），失败再降级 WARP；默认 256 job × 3 线程 × 15 账号 = 11,520；
 # 总账号 = job_count × workers × accounts。
 
 name: Twitch Register (distributed)
@@ -36,6 +36,18 @@ on:
         description: "WARP 协议: awg / masque-h2 / wg / masque（失败自动降级）"
         required: false
         default: "awg"
+      vpngate:
+        description: "优先使用 VPNGate: 1=开（失败自动降级 WARP） 0=直接用 WARP"
+        required: false
+        default: "1"
+      vpngate_nodes:
+        description: "VPNGate 拉取节点数"
+        required: false
+        default: "100"
+      vpngate_countries:
+        description: "VPNGate 国家白名单（逗号分隔，留空=全部）"
+        required: false
+        default: ""
       rest_every:
         description: "每注册 N 个账号休息一次（0=不休息）"
         required: false
@@ -106,6 +118,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: 安装 OpenVPN（VPNGate）
+        if: ${{ inputs.vpngate == '1' }}
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $exe = 'C:/Program Files/OpenVPN/bin/openvpn.exe'
+          if (Test-Path $exe) { Write-Host "openvpn already installed"; exit 0 }
+          choco install openvpn --no-progress -y
+          if (-not (Test-Path $exe)) { Write-Warning "openvpn 安装失败，VPNGate 将跳过并降级 WARP" }
+
+      - name: 安装 CloakBrowser Chromium
+        continue-on-error: true
+        run: python -m cloakbrowser install
+
       - name: 缓存 xehn 包
         uses: actions/cache@v4
         with:
@@ -125,19 +151,40 @@ jobs:
           MAX_FAILS: "30"
           EGRESS_ROTATE_AFTER: "3"
           RUYIJS_FIREFOX: "159"
+          BROWSER_ENGINE: "chromium"
+          CHROME_HEADLESS: "1"
+          EGRESS_MANAGER: "1"
+          VPNGATE_ENABLED: ${{ inputs.vpngate }}
+          VPNGATE_NODES: ${{ inputs.vpngate_nodes }}
+          VPNGATE_COUNTRIES: ${{ inputs.vpngate_countries }}
+          VPNGATE_OPENVPN: 'C:/Program Files/OpenVPN/bin/openvpn.exe'
+          VPNGATE_ATTEMPTS: "12"
+          VPNGATE_TIMEOUT: "30"
+          VPNGATE_MIN_NODES: "10"
+          VPNGATE_FETCH_ROUNDS: "4"
+          VPNGATE_MIN_VALID: "5"
+          VPNGATE_VALIDATE_MAX: "12"
+          VPNGATE_POOL_ROUNDS: "4"
+          VPNGATE_REFRESH_ROUNDS: "2"
+          WARP_CORE: ${{ inputs.warp_core }}
+          WARP_FAIL_LIMIT: "3"
+          WARP_SCRIPT: "scripts/setup_egress.ps1"
           REST_EVERY: ${{ inputs.rest_every }}
           REST_SEC: ${{ inputs.rest_sec }}
           PROBE_ONLY: ${{ inputs.probe_only }}
         run: |
-          # 出口与注册必须在同一步骤：GitHub 会在步骤结束时杀掉后台隧道进程
-          ./scripts/setup_egress.ps1 -Core "${{ inputs.warp_core }}" -Port 7890
-          if (-not $env:PROXY_SERVER) { Write-Host "::error::WARP egress not ready"; exit 1 }
+          # 出口由 Python EgressManager 管理：先筛选 VPNGate，失败切 WARP
           if ("${{ inputs.probe_only }}" -eq "1") {
-            python scripts/probe_egress.py "$env:PROXY_SERVER"
-            exit $LASTEXITCODE
+            python batch_run.py --probe-only
+          } else {
+            python batch_run.py --workers "$env:WORKERS" --accounts "$env:ACCOUNTS" `
+              --rest-every "$env:REST_EVERY" --rest-sec "$env:REST_SEC"
           }
-          python batch_run.py --workers "$env:WORKERS" --accounts "$env:ACCOUNTS" `
-            --rest-every "$env:REST_EVERY" --rest-sec "$env:REST_SEC"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: 停止 VPNGate
+        if: always()
+        run: python -m twreg.vpngate --down || true
 
       - name: 上传账号与日志
         if: always()
