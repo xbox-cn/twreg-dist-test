@@ -40,8 +40,12 @@ on:
         description: "WARP 协议: awg / masque-h2 / wg / masque（失败自动降级）"
         required: false
         default: "awg"
+      warp:
+        description: "WARP: 1=开 0=跳过（用于单独验证 VPNGate/UR）"
+        required: false
+        default: "1"
       vpngate:
-        description: "优先使用 VPNGate: 1=开（失败自动降级 WARP） 0=直接用 WARP"
+        description: "VPNGate: 1=开 0=跳过"
         required: false
         default: "1"
       vpngate_nodes:
@@ -220,6 +224,7 @@ jobs:
           VPNGATE_VALIDATE_MAX: "12"
           VPNGATE_POOL_ROUNDS: "4"
           VPNGATE_REFRESH_ROUNDS: "2"
+          WARP_ENABLED: ${{ inputs.warp }}
           WARP_CORE: ${{ inputs.warp_core }}
           WARP_FAIL_LIMIT: "3"
           WARP_SCRIPT: "scripts/setup_egress.ps1"
