@@ -229,7 +229,7 @@ jobs:
           WARP_FAIL_LIMIT: "3"
           WARP_SCRIPT: "scripts/setup_egress.ps1"
           VPNGATE_LIST_TOKEN: ${{ secrets.PRIVATE_REPO_ACCESS_KEY }}
-          VPNGATE_LIST_REPO: xbox-cn/vpngate-twitch-list
+          EGRESS_LIST_REPO: xbox-cn/twitch-egress-list
           UR_ENABLED: "1"
           UR_AUTO_ACCOUNTS: "1"
           UR_BASE_PORT: "9101"
