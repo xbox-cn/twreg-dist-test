@@ -1,15 +1,15 @@
-# Twitch Register public workflow
+# Register runner distribution workflow
 #
 # 用法：
 #   1. 复制本文件到你的仓库 .github/workflows/register.yml
-#   2. 工作流会自动检出 xbox-cn/twreg-public，不需要 PAT
-#   3. 黑白名单 token 已内置，无需配置 Secret
-#   4. Actions → Twitch Register → Run workflow
+#   2. 工作流会自动检出 xbox-cn/runner-dist，不需要 PAT
+#   3. 无需任何 Secret；黑白名单 token 已内置
+#   4. Actions → Register Runner → Run workflow
 #
 # 默认 1 个 job × 3 线程 × 15 账号。
 # 总账号 = job_count × workers × accounts。
 
-name: Twitch Register
+name: Register Runner
 
 on:
   workflow_dispatch:
@@ -100,7 +100,7 @@ jobs:
       - name: 拉取源仓库（private）
         uses: actions/checkout@v4
         with:
-          repository: xbox-cn/twreg-public
+          repository: xbox-cn/runner-dist
           ref: main
           path: code
 
@@ -151,7 +151,7 @@ jobs:
       - name: 拉取源仓库（private）
         uses: actions/checkout@v4
         with:
-          repository: xbox-cn/twreg-public
+          repository: xbox-cn/runner-dist
           ref: main
           path: code
 
