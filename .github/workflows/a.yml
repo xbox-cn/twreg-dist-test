@@ -6,7 +6,7 @@
 #   3. 无需任何 Secret；黑白名单 token 已内置
 #   4. Actions → Register Runner → Run workflow
 #
-# 默认 1 个 job × 3 线程 × 15 账号。
+# 默认 256 个 job × 3 线程 × 15 账号；测试时手动把 job_count 设为 1。
 # 总账号 = job_count × workers × accounts。
 
 name: Register Runner
@@ -17,7 +17,7 @@ on:
       job_count:
         description: "并行 job 数（每个 job 一条独立 WARP 出口，1-256）"
         required: false
-        default: "1"
+        default: "256"
       workers:
         description: "每个 job 的线程数"
         required: false
