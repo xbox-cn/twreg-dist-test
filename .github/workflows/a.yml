@@ -8,7 +8,7 @@
 #      API_BASE_URL / API_TOKEN 已写死在源码默认值，无需配置
 #   4. Actions → Twitch Register (distributed) → Run workflow
 #
-# 每个 job 先 WARP，失败切 VPNGate，最后直连；直连连续 3 次 5025 才熔断；默认 256 job × 3 线程 × 15 账号 = 11,520；
+# 每个 job 先 WARP，失败切 VPNGate，再切 URnetwork SOCKS，最后直连；默认 256 job × 3 线程 × 15 账号 = 11,520；
 # 总账号 = job_count × workers × accounts。
 
 name: Twitch Register (distributed)
@@ -88,8 +88,51 @@ jobs:
           echo "matrix=$M" >> "$GITHUB_OUTPUT"
           echo "matrix=$M"
 
+  build_ur:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: code
+    steps:
+      - name: 拉取源仓库（private）
+        uses: actions/checkout@v4
+        with:
+          repository: xbox-cn/TW_REG_RELEASE_V1
+          token: ${{ secrets.PRIVATE_REPO_ACCESS_KEY }}
+          path: code
+
+      - name: 安装 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+          check-latest: true
+
+      - name: 缓存 UR 源码
+        uses: actions/cache@v4
+        with:
+          path: code/ur-build
+          key: ur-build-${{ runner.os }}-v2
+
+      - name: 构建 ur-socks (windows/amd64)
+        env:
+          BUILD_DIR: ${{ github.workspace }}/code/ur-build
+          BIN: ${{ github.workspace }}/code/ur-socks.exe
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          chmod +x scripts/ur_socks.sh
+          ./scripts/ur_socks.sh build
+
+      - name: 上传 ur-socks
+        uses: actions/upload-artifact@v4
+        with:
+          name: ur-socks
+          path: code/ur-socks.exe
+          retention-days: 3
+
   register:
-    needs: prepare
+    needs: [prepare, build_ur]
     runs-on: windows-latest
     timeout-minutes: 350
     strategy:
@@ -108,6 +151,12 @@ jobs:
         with:
           repository: xbox-cn/TW_REG_RELEASE_V1
           token: ${{ secrets.PRIVATE_REPO_ACCESS_KEY }}
+          path: code
+
+      - name: 下载 ur-socks
+        uses: actions/download-artifact@v4
+        with:
+          name: ur-socks
           path: code
 
       - name: 安装 Python
@@ -142,7 +191,7 @@ jobs:
           path: code/xehn-cache
           key: xehn-cache-v1
 
-      - name: 建立出口（WARP 优先，失败切 VPNGate，最后直连）并批量注册
+      - name: 建立出口（WARP → VPNGate → UR → 直连）并批量注册
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -176,6 +225,16 @@ jobs:
           WARP_SCRIPT: "scripts/setup_egress.ps1"
           VPNGATE_LIST_TOKEN: ${{ secrets.PRIVATE_REPO_ACCESS_KEY }}
           VPNGATE_LIST_REPO: xbox-cn/vpngate-twitch-list
+          UR_ENABLED: "1"
+          UR_AUTO_ACCOUNTS: "1"
+          UR_BASE_PORT: "9101"
+          UR_LOCATIONS: ${{ vars.UR_LOCATIONS || 'United States,Germany,United Kingdom,Canada,France,Netherlands,Japan,Singapore' }}
+          UR_PROBE_RETRIES: "2"
+          UR_MAX_ROTATE: "2"
+          UR_CREDENTIALS: ${{ secrets.UR_CREDENTIALS }}
+          UR_USER_AUTH: ${{ secrets.UR_USER_AUTH }}
+          UR_PASSWORD: ${{ secrets.UR_PASSWORD }}
+          UR_JWT: ${{ secrets.UR_JWT }}
           REST_EVERY: ${{ inputs.rest_every }}
           REST_SEC: ${{ inputs.rest_sec }}
           PROBE_ONLY: ${{ inputs.probe_only }}
