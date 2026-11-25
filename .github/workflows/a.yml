@@ -204,6 +204,7 @@ jobs:
           ENABLE_UPLOAD: ${{ inputs.upload }}
           WORKER_NAME: reg_dist_${{ github.run_id }}_${{ matrix.index }}
           MAX_FAILS: "30"
+          JOB_TIMEOUT: "3000"
           MAX_CONCURRENT_CTX: ${{ inputs.workers }}
           EGRESS_ROTATE_AFTER: "3"
           RUYIJS_FIREFOX: "159"
