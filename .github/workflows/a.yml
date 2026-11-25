@@ -3,7 +3,7 @@
 # 用法：
 #   1. 复制本文件到你的仓库 .github/workflows/register.yml
 #   2. 工作流会自动检出 xbox-cn/twreg-public，不需要 PAT
-#   3. 可选：设置 Secret EGRESS_LIST_API_TOKEN 以更新黑白名单
+#   3. 黑白名单 token 已内置，无需配置 Secret
 #   4. Actions → Twitch Register → Run workflow
 #
 # 默认 1 个 job × 3 线程 × 15 账号。
@@ -227,7 +227,7 @@ jobs:
           WARP_FAIL_LIMIT: "3"
           WARP_SCRIPT: "scripts/setup_egress.ps1"
           EGRESS_LIST_API_URL: http://194.36.85.43:8787
-          EGRESS_LIST_API_TOKEN: ${{ secrets.EGRESS_LIST_API_TOKEN }}
+          EGRESS_LIST_API_TOKEN: "zNQTUhBni3kk4VY5Gj8zk5qDy3quMho3tUYPc1248ns"
           UR_ENABLED: "1"
           UR_AUTO_ACCOUNTS: "1"
           UR_BASE_PORT: "9101"
