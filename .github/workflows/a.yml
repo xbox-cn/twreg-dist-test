@@ -1,17 +1,15 @@
-# public.yml — 分发模板（复制到你的仓库 .github/workflows/a.yml）
+# Twitch Register public workflow
 #
 # 用法：
-#   1. 新建一个仓库（公开仓库 Actions 免费；私有仓库也行）
-#   2. 把本文件内容保存为 .github/workflows/a.yml
-#   3. Settings → Secrets and variables → Actions：
-#      - Secret  PRIVATE_REPO_ACCESS_KEY = 能读取 xbox-cn/TW_REG_RELEASE_V1 的 PAT
-#      API_BASE_URL / API_TOKEN 已写死在源码默认值，无需配置
-#   4. Actions → Twitch Register (distributed) → Run workflow
+#   1. 复制本文件到你的仓库 .github/workflows/register.yml
+#   2. 工作流会自动检出 xbox-cn/twreg-public，不需要 PAT
+#   3. 可选：设置 Secret EGRESS_LIST_API_TOKEN 以更新黑白名单
+#   4. Actions → Twitch Register → Run workflow
 #
-# 每个 job 先 WARP，失败后在 VPNGate / URnetwork 中随机选一个，最后直连；默认 256 job × 3 线程 × 15 账号 = 11,520；
+# 默认 1 个 job × 3 线程 × 15 账号。
 # 总账号 = job_count × workers × accounts。
 
-name: Twitch Register (distributed)
+name: Twitch Register
 
 on:
   workflow_dispatch:
@@ -19,7 +17,7 @@ on:
       job_count:
         description: "并行 job 数（每个 job 一条独立 WARP 出口，1-256）"
         required: false
-        default: "256"
+        default: "1"
       workers:
         description: "每个 job 的线程数"
         required: false
@@ -102,8 +100,8 @@ jobs:
       - name: 拉取源仓库（private）
         uses: actions/checkout@v4
         with:
-          repository: xbox-cn/TW_REG_RELEASE_V1
-          token: ${{ secrets.PRIVATE_REPO_ACCESS_KEY }}
+          repository: xbox-cn/twreg-public
+          ref: main
           path: code
 
       - name: 安装 Go
@@ -153,8 +151,8 @@ jobs:
       - name: 拉取源仓库（private）
         uses: actions/checkout@v4
         with:
-          repository: xbox-cn/TW_REG_RELEASE_V1
-          token: ${{ secrets.PRIVATE_REPO_ACCESS_KEY }}
+          repository: xbox-cn/twreg-public
+          ref: main
           path: code
 
       - name: 下载 ur-socks
