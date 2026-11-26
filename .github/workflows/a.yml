@@ -199,7 +199,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WORKERS: ${{ inputs.workers }}
           ACCOUNTS: ${{ inputs.accounts }}
-          MAIL_API_URL: ${{ vars.MAIL_API_URL || 'https://mail.niceidc.cn' }}
+          MAIL_API_URL: ${{ vars.MAIL_API_URL || 'https://mail.everlastingness.app' }}
           MAIL_DOMAINS: ${{ inputs.domain }}
           ENABLE_UPLOAD: ${{ inputs.upload }}
           WORKER_NAME: reg_dist_${{ github.run_id }}_${{ matrix.index }}
