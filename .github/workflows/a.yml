@@ -31,9 +31,9 @@ on:
         required: false
         default: "1"
       domain:
-        description: "收信域名（*.xxx 表示每次随机子域）"
+        description: "收信域名；短期邮局留空=自动随机分配。仅 MAIL_SHORT=0 或 outlook 时需要填写"
         required: false
-        default: "*.olsbvgq.shop"
+        default: ""
       warp_core:
         description: "WARP 协议: awg / masque-h2 / wg / masque（失败自动降级）"
         required: false
