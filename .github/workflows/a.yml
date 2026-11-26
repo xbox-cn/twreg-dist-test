@@ -202,7 +202,6 @@ jobs:
           MAIL_API_URL: ${{ vars.MAIL_API_URL || 'https://outlook.tw' }}
           MAIL_DOMAINS: ${{ inputs.domain }}
           NO_PROXY: "outlook.tw"
-          no_proxy: "outlook.tw"
           ENABLE_UPLOAD: ${{ inputs.upload }}
           WORKER_NAME: reg_dist_${{ github.run_id }}_${{ matrix.index }}
           MAX_FAILS: "30"
