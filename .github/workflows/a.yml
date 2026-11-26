@@ -33,7 +33,7 @@ on:
       domain:
         description: "收信域名（*.xxx 表示每次随机子域）"
         required: false
-        default: "*.everlastingness.app"
+        default: "*.xbox.org.cn"
       warp_core:
         description: "WARP 协议: awg / masque-h2 / wg / masque（失败自动降级）"
         required: false
